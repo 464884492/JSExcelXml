@@ -2,10 +2,8 @@ JSExcelXml.js
 ==========
 依赖 juqery.js easyui.js
 ==========
-导出Excel参数说明
-http://www.cnblogs.com/yfrs/p/4110381.html
-导出Excel模板说
-http://www.cnblogs.com/yfrs/p/4112245.
+导出Excel参数说明:http://www.cnblogs.com/yfrs/p/4110381.html
+导出Excel模板说明: http://www.cnblogs.com/yfrs/p/4112245.html
 ==========
 实现方式
 1.前端数据通过js构建Excel可解析的xml格式串
