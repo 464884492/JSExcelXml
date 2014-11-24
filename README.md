@@ -1,4 +1,4 @@
-JSExcelXml
+JSExcelXml.js
 ==========
 依赖 juqery.js easyui.js
 ==========
