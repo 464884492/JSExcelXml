@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+    <script src="jquery-1.7.1.min.js"></script>
+    <script src="EasyUI/jquery.easyui.min.js"></script>
+    <link href="EasyUI/themes/gray/easyui.css" rel="stylesheet" />
+    <link href="EasyUI/themes/icon.css" rel="stylesheet" />
+    <script src="EasyUI/locale/easyui-lang-zh_CN.js"></script>
+    <script src="ExportExcelDlg.js"></script>
+</head>
+<body>
+    <table id="dg" title="My Users" class="easyui-datagrid" style="width: 700px; height: 250px" toolbar="#toolbar" method="get" rownumbers="true" fitcolumns="true" singleselect="true">
+        <thead>
+            <tr>
+                <th field="firstname" width="50">First Name</th>
+                <th field="lastname" width="50">Last Name</th>
+                <th field="phone" width="50">Phone</th>
+                <th field="email" width="50">Email</th>
+            </tr>
+        </thead>
+    </table>
+    <div id="toolbar">
+        <a href="javascript:void(0)" class="easyui-linkbutton" iconcls="icon-add" plain="true" onclick="exportexcel()">导出</a>
+
+    </div>
+</body>
+<script type="text/javascript">
+    $(function () {
+        var grid = $("#dg");
+        var data = [{ "id": "174392", "firstname": "sdf", "lastname": "sdf", "phone": "dsf", "email": "dsf@qq.com" }, { "id": "174393", "firstname": "1", "lastname": "1", "phone": "", "email": "" }, { "id": "174397", "firstname": "33", "lastname": "33", "phone": "", "email": "" }, { "id": "174399", "firstname": "asda", "lastname": "asd", "phone": "asd", "email": "asda@qq.com" }];
+        grid.datagrid("loadData", data);
+    });
+    function exportexcel() {
+        var grid = $("#dg");
+        var obj = $.ExportExcelDlg({
+            HeadInfo: grid.datagrid("options").columns,
+            RowInfo: grid.datagrid("getRows"),
+            FooterInfo: grid.datagrid("getFooterRows"),
+            RowStart: 2,
+            ColumStart: 2,
+            SheetName: 'sheet名字',
+            MainTitle: { Displayname: '主标题', Alignment: 'Center' },
+            SecondTitle: { Displayname: '父标题', Alignment: 'Right' },
+            SaveName: "js导出excel",
+            Swf: 'ExportExcel.swf'
+        });
+        obj.ExportExcelDlg('open');
+    }
+
+</script>
+</html>
