@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 ﻿/// <reference path="jquery-vs-doc.js" />
+=======
+/// <reference path="jquery-vs-doc.js" />
+>>>>>>> origin/master
 // Simple Set Clipboard System
 // Author: Joseph Huckaby
 
@@ -900,4 +904,8 @@ var JSXmlExcel = {
         };
         return this;
     };
+<<<<<<< HEAD
 })(jQuery);
+=======
+})(jQuery);
+>>>>>>> origin/master
