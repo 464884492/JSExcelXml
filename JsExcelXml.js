@@ -1,5 +1,4 @@
-
-var JSXmlExcel = {
+﻿var JSXmlExcel = {
     ConvertXmlDoc: function (text) {
         var xmlDoc = null;
         try {
@@ -127,13 +126,35 @@ var JSXmlExcel = {
         var headerXml = '';
         var columnCount = 0;
         var rowcount = 0;
-        var cellStartindex = columnStart;
-        var currentIndex = columnStart;
+        (function (columns) {
+            for (var i = 0; i < columns.length; i++) {
+                for (var j = 0; j < columns[i].length; j++) {
+                    if (j == 0) {
+                        columns[i][j].pos = 1;
+                    }
+                    if (j > 0) {
+                        if (columns[i][j - 1].colspan) {
+                            columns[i][j].pos = columns[i][j - 1].pos + columns[i][j - 1].colspan;
+                        }
+                        else {
+                            columns[i][j].pos = columns[i][j - 1].pos + 1;
+                        }
+                    }
+                    if (i > 0) {
+                        for (var p = 0; p < columns[i - 1].length; p++) {
+                            if (columns[i - 1][p].pos == columns[i][j].pos) {
+                                if (columns[i - 1][p].rowspan && columns[i - 1][p].rowspan > i) {
+                                    columns[i][j].pos += 1;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        })(headInfo);
         for (var i = 0; i < headInfo.length; i++) {
             var rowindex = rowStart + i + skipRowIndex;
             headerXml += '<Row ss:Index="' + rowindex + '" ss:AutoFitHeight="0">';
-            var find = false;
-            var setindex = true;
             for (var cell = 0; cell < headInfo[i].length; cell++) {
                 var curcell = headInfo[i][cell];
                 if (curcell.hidden || curcell.checkbox)
@@ -142,9 +163,8 @@ var JSXmlExcel = {
                 var MergeAcross = curcell.colspan ? curcell.colspan - 1 : 0;
                 if (curcell.field) {
                     columnCount = columnCount + 1;
-                    currentIndex = currentIndex + 1;
                     //判断是否单独设置列背景色
-                    var cobj = { columnfield: curcell.field, columnType: curcell.datatype, formatter: curcell.formatter };
+                    var cobj = { columnfield: curcell.field, columnType: curcell.datatype, formatter: curcell.formatter, pos: curcell.pos };
                     if (curcell.bgcolor) {
                         cobj.BgColor = curcell.bgcolor;
                         var cellstyle = this.BuildStyleFactory("col_" + curcell.field, $.extend(true, {}, defaultseting, { BgColor: cobj.BgColor }));
@@ -152,20 +172,15 @@ var JSXmlExcel = {
                     }
                     columnInfo.push(cobj);
                 }
-                if (MergeAcross != 0 && !find) {
-                    find = true;
-                    cellStartindex = currentIndex;
-                }
-                headerXml += '<Cell ss:StyleID="TableHeadStyle" ' +
-                    (setindex === true ? 'ss:Index="' + cellStartindex + '"' : '') +
-                    ' ss:MergeDown="' + MergeDown + '"' +
-                ' ss:MergeAcross="' + MergeAcross + '"' +
-                ' ><Data ss:Type="String">' + curcell.title + '</Data></Cell>';
-                setindex = false;
+                headerXml += '<Cell ss:StyleID="TableHeadStyle" ' + 'ss:Index="' + (curcell.pos + columnStart - 1) + '"' +
+                                        ' ss:MergeDown="' + MergeDown + '"' +
+                                        ' ss:MergeAcross="' + MergeAcross + '"' +
+                                        ' ><Data ss:Type="String">' + curcell.title + '</Data></Cell>';
             }
             headerXml += '</Row>';
             rowcount = rowcount + 1;
         }
+        columnInfo.sort(function (a, b) { return a.pos - b.pos });
         return {
             columnInfo: columnInfo,
             columnCount: columnCount,
@@ -179,8 +194,8 @@ var JSXmlExcel = {
         for (var i = 0; i < rowInfo.length; i++) {
             var Style = "TableDataStyle";
             rowxml += '<Row ss:AutoFitHeight="0">';
-            if (rowInfo[i].BgColor) {
-                var cfg = $.extend(true, {}, defaultsetting, { BgColor: rowInfo[i].BgColor });
+            if (rowInfo[i].BACKGROUND) {
+                var cfg = $.extend(true, {}, defaultsetting, { BgColor: rowInfo[i].BACKGROUND });
                 Styles.push(this.BuildStyleFactory("row_" + i, cfg));
                 Style = "row_" + i;
             }
@@ -190,6 +205,9 @@ var JSXmlExcel = {
                 var value = rowInfo[i][col.columnfield];
                 if (col.formatter) {
                     value = col.formatter(value, null, null);
+                }
+                if (value != 0) {
+                    value = value || ' ';
                 }
                 var type = columnInfo[j].columnType ? columnInfo[j].columnType : "String";
                 var cellindex = columStart + j;
@@ -219,8 +237,15 @@ var JSXmlExcel = {
                             cell.attr({
                                 "ss:MergeAcross": ma
                             });
-                            //删除后边的同伴
-                            cell.nextAll(":lt(" + ma + ")").remove();
+                            var cells = cell.nextAll(":lt(" + ma + ")");
+                            if (!window.ActiveXObject) {
+                                //删除后边的同伴
+                                cells.remove();
+                            } else {
+                                cells.each(function (index, cell) {
+                                    $(row)[0].removeChild($(this)[0]);
+                                });
+                            }
                         }
                         // 行合并
                         if (mginfo.rowspan) {
@@ -231,11 +256,21 @@ var JSXmlExcel = {
                             //删除下一行中对应的列
                             $(row).nextAll(":lt(" + md + ")").each(function (index, currow) {
                                 var curcell = $(currow).find("Cell[field=" + mginfo.field + "]").first();
+                                var cells = null;
                                 //存在列合并
                                 if (mginfo.colspan) {
-                                    curcell.nextAll(":lt(" + (mginfo.colspan - 1) + ")").remove();
+                                    cells = curcell.nextAll(":lt(" + (mginfo.colspan - 1) + ")");
                                 }
-                                curcell.remove();
+                                if (!window.ActiveXObject) {
+                                    if (cells) { cells.remove(); }
+                                    curcell.remove();
+                                } else {
+                                    //IE 
+                                    if (cells) {
+                                        cells.each(function (i, r) { $(currow)[0].removeChild($(this)[0]); });
+                                    }
+                                    $(currow)[0].removeChild(curcell[0]);
+                                }
                             });
                         }
                     }
@@ -367,7 +402,7 @@ var JSXmlExcel = {
         var dsSheet = this.BuildEnumSheet(ds);
         var tbgstyle = ['<Style ss:ID="tbbg">', this.BuildBackGound('#FFFFFF'), '</Style>'].join('');
         var hdstyle = ['<Style ss:ID="hdbg">', this.BuildBorderStyle(), this.BuildBackGound('#D8D8D8'), '</Style>'].join('');
-        var border = ['<Style ss:ID="bdbg">', this.BuildBorderStyle(), '</Style>'].join('');
+        var border = ['<Style ss:ID="bdbg">', this.BuildBorderStyle(), this.BuildAlignment('Left', 1), '</Style>'].join('');
         var xml = this.BuildAllXml([tbgstyle, hdstyle, border].join(''), [sheet, dsSheet].join(''));
         return xml;
     },
@@ -392,5 +427,6 @@ var JSXmlExcel = {
        </WorksheetOptions>\
       </Worksheet>';
         return sheet;
-    }
+    },
+
 };
