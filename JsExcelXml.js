@@ -1,4 +1,36 @@
-﻿var JSXmlExcel = {
+﻿/***根据传入数据生成
+[
+               { field: 'F_UserID', title: '公告ID', hidden: true, rowspan: 3,formatter:function(value,x,x), datatype: 'Number' },
+               { field: 'F_RealName', title: '姓名', rowspan: 3 bgcolor:"#FF0000"},
+               { field: 'F_LoginName', title: '登录名',rowspan: 3 },
+               { field: 'F_Password', title: '密码', rowspan: 3， datatype: 'Number'},
+               { title: '多表头', colspan: 5 }
+            ], [
+               { field: 'F_UserNick', title: '昵称',rowspan:2},
+               { field: 'F_IdNumber', title: '身份证号', rowspan:2 },
+               { title: '多表3', colspan: 3}
+            ], [
+               { field: 'F_Tel', title: '电话'},
+               { field: 'F_BirthDate', title: '生日' },
+               { field: 'F_EMail', title: '邮箱' },
+            ]
+@param {Array} dataOpts.HeadInfo
+         [{
+         F_userName:xx,F_userPwd:ddd
+         },{
+         F_userName:11,F_userPwd:222
+         }]
+@param {Array} dataOpts.RowInfo
+@param {Array} dataOpts.FooterInfo
+@param {int} dataOpts.RowStart
+@param {int} dataOpts.ColumStart
+@param {String} dataOpts.SheetName
+@param {object} dataOpts.MainTitle{Displayname:'MainTitle',Alignment:'Center'}
+@param {object} dataOpts.SecondTitle{Displayname:'SecondTitle',Alignment:'Right'}
+@param {object} dataOpts.mergeCells [{field:'F_UserName',index:2,rowspan:2,colspan:2},{field:'F_UserPwd',rowIndex:2,rowspan:2,colspan:2}]
+***/
+
+var JSXmlExcel = {
     ConvertXmlDoc: function (text) {
         var xmlDoc = null;
         try {
@@ -164,12 +196,19 @@
                 if (curcell.field) {
                     columnCount = columnCount + 1;
                     //判断是否单独设置列背景色
-                    var cobj = { columnfield: curcell.field, columnType: curcell.datatype, formatter: curcell.formatter, pos: curcell.pos };
+                    var cobj = { columnfield: curcell.field, columnType: curcell.datatype, formatter: curcell.formatter, pos: curcell.pos, align: curcell.align };
+                    var colStyle = {};
                     if (curcell.bgcolor) {
-                        cobj.BgColor = curcell.bgcolor;
-                        var cellstyle = this.BuildStyleFactory("col_" + curcell.field, $.extend(true, {}, defaultseting, { BgColor: cobj.BgColor }));
-                        Styles.push(cellstyle);
+                        cobj.BgColor = curcell.bgcolor
+                        colStyle.BgColor = curcell.bgcolor;
                     }
+                    if (curcell.align) {
+                        if (curcell.align == "left") { colStyle.Alignment = "Left"; cobj.align = "Left"; }
+                        if (curcell.align == "right") { colStyle.Alignment = "Right"; cobj.align = "Right"; }
+                        if (curcell.align == "center") { colStyle.Alignment = "Center"; cobj.align = "Center"; }
+                    }
+                    var cellstyle = this.BuildStyleFactory("col_" + curcell.field, $.extend(true, {}, defaultseting, colStyle));
+                    Styles.push(cellstyle);
                     columnInfo.push(cobj);
                 }
                 headerXml += '<Cell ss:StyleID="TableHeadStyle" ' + 'ss:Index="' + (curcell.pos + columnStart - 1) + '"' +
@@ -192,29 +231,26 @@
         var rowCount = 0;
         var rowxml = '';
         for (var i = 0; i < rowInfo.length; i++) {
-            var Style = "TableDataStyle";
             rowxml += '<Row ss:AutoFitHeight="0">';
-            if (rowInfo[i].BACKGROUND) {
-                var cfg = $.extend(true, {}, defaultsetting, { BgColor: rowInfo[i].BACKGROUND });
-                Styles.push(this.BuildStyleFactory("row_" + i, cfg));
-                Style = "row_" + i;
-            }
             var resetStyle = Style;
             for (var j = 0; j < columnInfo.length; j++) {
                 var col = columnInfo[j];
                 var value = rowInfo[i][col.columnfield];
                 if (col.formatter) {
-                    value = col.formatter(value, null, null);
+                    value = col.formatter(value, rowInfo[i], i);
                 }
                 if (value != 0) {
                     value = value || ' ';
                 }
                 var type = columnInfo[j].columnType ? columnInfo[j].columnType : "String";
                 var cellindex = columStart + j;
-                if (col.BgColor) {
-                    Style = "col_" + col.columnfield;
+                var Style = "col_" + col.columnfield;
+                if (rowInfo[i].F_BACKGROUND) {
+                    var cfg = $.extend(true, {}, defaultsetting, { BgColor: rowInfo[i].F_BACKGROUND, Alignment: col.align });
+                    Styles.push(this.BuildStyleFactory("row_" + i + "_" + j, cfg));
+                    Style = "row_" + i + "_" + j;
                 }
-                rowxml += '<Cell field="' + col.columnfield + '" ss:StyleID="' + Style + '" ss:Index="' + cellindex + '" ><Data ss:Type="' + type + '">' + value + '</Data></Cell>';
+                rowxml += '<Cell field="' + col.columnfield + '" ss:StyleID="' + Style + '" ss:Index="' + cellindex + '" ><Data ss:Type="' + type + '">' + this.EncodeValue(value) + '</Data></Cell>';
                 Style = resetStyle;
             }
             rowxml += '</Row> ';
@@ -333,7 +369,7 @@
                 var value = footInfo[i][columnInfo[j].columnfield];
                 var type = columnInfo[j].columnType ? columnInfo[j].columnType : "String";
                 footXml += '<Cell ss:StyleID="' + styleFootID + '" ' + (j === 0 ? 'ss:Index="' + columnStart + '"' : ' ') +
-                    ' ><Data ss:Type="' + type + '">' + (value ? value : "") + '</Data></Cell>';
+                    ' ><Data ss:Type="' + type + '">' + this.EncodeValue((value ? value : "")) + '</Data></Cell>';
             }
             footXml += '</Row> ';
             rowCount = rowCount + 1;
@@ -429,4 +465,14 @@
         return sheet;
     },
 
+    EncodeValue: function (content) {
+        var code = { '<': '&lt;', '>': '&gt;', '&': '&amp;', '\'': '&apos;', '"': '&quot;' };
+        var encodeC = "";
+        encodeC = content.replace(/</g, '&lt;')
+                                      .replace(/>/g, '&gt;')
+                                      .replace(/'/g, '&apos;')
+                                      .replace(/"/g, '&quot;')
+                                      .replace(/&(?![a-zA-Z]{1,10};)/, "&amp;");
+        return encodeC;
+    }
 };
