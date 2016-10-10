@@ -22,8 +22,8 @@
         </thead>
     </table>
     <div id="toolbar">
-        <a href="javascript:void(0)" class="easyui-linkbutton" iconcls="icon-add" plain="true" onclick="exportexcel()">导出</a>
-
+        <a href="javascript:void(0)" class="easyui-linkbutton" iconcls="icon-add" plain="true" onclick="exportexcel(false)">导出</a>
+      <a href="javascript:void(0)" class="easyui-linkbutton" iconcls="icon-add" plain="true" onclick="exportexcel(true)">导出2</a>
     </div>
 </body>
 <script type="text/javascript">
@@ -32,11 +32,17 @@
         var data = [{ "id": "174392", "firstname": "sdf", "lastname": "sdf", "phone": "dsf", "email": "dsf@qq.com" }, { "id": "174393", "firstname": "1", "lastname": "1", "phone": "", "email": "" }, { "id": "174397", "firstname": "33", "lastname": "33", "phone": "", "email": "" }, { "id": "174399", "firstname": "asda", "lastname": "asd", "phone": "asd", "email": "asda@qq.com" }];
         grid.datagrid("loadData", data);
     });
-    function exportexcel() {
+    function exportexcel(filter) {
+        
         var grid = $("#dg");
+        var rows=grid.datagrid("getRows");
+        if(filter){
+          rows=[rows[0],rows[1]];
+        }
+        console.log(rows);
         var obj = $.ExportExcelDlg({
             HeadInfo: grid.datagrid("options").columns,
-            RowInfo: grid.datagrid("getRows"),
+            RowInfo: rows,
             FooterInfo: grid.datagrid("getFooterRows"),
             RowStart: 2,
             ColumStart: 2,

@@ -360,6 +360,7 @@ var JSXmlExcel = {
                 }
             }
         })(headInfo);
+
         for (var i = 0; i < headInfo.length; i++) {
             var rowindex = rowStart + i + skipRowIndex;
             headerXml += '<Row ss:Index="' + rowindex + '" ss:AutoFitHeight="0">';
@@ -385,6 +386,7 @@ var JSXmlExcel = {
                     }
                     var cellstyle = this.BuildStyleFactory("col_" + curcell.field, $.extend(true, {}, defaultseting, colStyle));
                     Styles.push(cellstyle);
+                    console.log(columnInfo);
                     columnInfo.push(cobj);
                 }
                 headerXml += '<Cell ss:StyleID="TableHeadStyle" ' + 'ss:Index="' + (curcell.pos + columnStart - 1) + '"' +
@@ -685,14 +687,15 @@ var JSXmlExcel = {
                     text: '确定',
                     id: 'EEDlg_btnconfirm',
                     handler: function () {
-                        container.mask("数据处理中");
+                       // container.mask("数据处理中");
                         var newOpts = $.extend(true, defaultseeting, opts);
                         var blob = new Blob([JSXmlExcel.BulidXml(newOpts)], { type: "text/xml;charset=utf-8" });
                         var fs = saveAs(blob, newOpts.SaveName + '.xls');
                         fs.onwriteend = function () {
                             setTimeout(function () {
-                                $.showTips("导出成功");
+                                //$.showTips("导出成功");
                                 container.dialog('close');
+                                $("#EEDlg").dialog("destroy");
                                 blob = null;
                             }, 100);
                         };
@@ -702,6 +705,7 @@ var JSXmlExcel = {
                     text: '取消',
                     handler: function () {
                         container.dialog('close');
+                         $("#EEDlg").dialog("destroy");
                     }
                 }],
             });
