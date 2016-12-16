@@ -53,6 +53,7 @@ var JSXmlExcel = {
         var titleXml = "";
         var rowxml = "";
         var footxml = "";
+        var widthxml = '';
         var Styles = [];
 
         //用于记录列信息 字段Field 数据类型
@@ -68,6 +69,9 @@ var JSXmlExcel = {
         ExpandedRowCount = objhead.rowcount + ExpandedRowCount;
         ExpandedColumnCount = objhead.columnCount + ExpandedColumnCount;
         columnInfo = objhead.columnInfo;
+        //创建列宽度
+        widthxml = this.BuildColumnWidthXml(columnInfo);
+
         //创建表标题
         if (dataOpts.MainTitle.Displayname) {
             //构建主标题样式
@@ -97,21 +101,29 @@ var JSXmlExcel = {
         }
         //WorkSheet
         var WorkSheet = '<Worksheet ss:Name="' + dataOpts.SheetName + '">' +
-      '<Table ss:ExpandedColumnCount="' + ExpandedColumnCount +
-      '" ss:ExpandedRowCount="' + ExpandedRowCount +
-      '" x:FullColumns="1" x:FullRows="1" ss:DefaultColumnWidth="100" ss:DefaultRowHeight="16">' + titleXml + headerXml + rowxml + footxml +
-        '</Table></Worksheet>';
+            '<Table ss:ExpandedColumnCount="' + ExpandedColumnCount +
+            '" ss:ExpandedRowCount="' + ExpandedRowCount +
+            '" x:FullColumns="1" x:FullRows="1" ss:DefaultColumnWidth="100" ss:DefaultRowHeight="16">' + widthxml + titleXml + headerXml + rowxml + footxml +
+            '</Table></Worksheet>';
         return this.BuildAllXml(Styles.join(' '), WorkSheet);
+    },
+    //设置列宽 m默认100px
+    BuildColumnWidthXml: function (columnInfo) {
+        var widthxml = [];
+        for (var columnIndex in columnInfo) {
+            widthxml.push('<Column ss:Index="' + (parseInt(columnIndex) + 1) + '" ss:AutoFitWidth="0" ss:Width="' + (columnInfo[columnIndex].excelWidth || 100) + '"/>');
+        }
+        return widthxml.join("");
     },
     //构建样式
     BuildBorderStyle: function () {
         //ss: Color = "' + colors + '"
         var borders = ' <Borders> ' +
-                            '<Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" /> ' +
-                            '<Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/> ' +
-                            '<Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" /> ' +
-                            '<Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" /> ' +
-                            '</Borders> ';
+            '<Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" /> ' +
+            '<Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/> ' +
+            '<Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" /> ' +
+            '<Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" /> ' +
+            '</Borders> ';
         return borders;
     },
     BuildBackGound: function (colors) {
@@ -159,6 +171,16 @@ var JSXmlExcel = {
         var columnCount = 0;
         var rowcount = 0;
         (function (columns) {
+            //2016-12-16 remove hidden column
+            for (var i = 0; i < columns.length; i++) {
+                for (var j = 0; j < columns[i].length; j++) {
+                    if (columns[i][j].hidden || columns[i][j].checkbox) {
+                        columns[i].splice(j, 1);
+                        j--;
+                    }
+                }
+            }
+
             for (var i = 0; i < columns.length; i++) {
                 for (var j = 0; j < columns[i].length; j++) {
                     if (j == 0) {
@@ -212,9 +234,9 @@ var JSXmlExcel = {
                     columnInfo.push(cobj);
                 }
                 headerXml += '<Cell ss:StyleID="TableHeadStyle" ' + 'ss:Index="' + (curcell.pos + columnStart - 1) + '"' +
-                                        ' ss:MergeDown="' + MergeDown + '"' +
-                                        ' ss:MergeAcross="' + MergeAcross + '"' +
-                                        ' ><Data ss:Type="String">' + curcell.title + '</Data></Cell>';
+                    ' ss:MergeDown="' + MergeDown + '"' +
+                    ' ss:MergeAcross="' + MergeAcross + '"' +
+                    ' ><Data ss:Type="String">' + curcell.title + '</Data></Cell>';
             }
             headerXml += '</Row>';
             rowcount = rowcount + 1;
@@ -378,20 +400,20 @@ var JSXmlExcel = {
     },
     BuildAllXml: function (styles, workSheet) {
         var xmlInfo = '<?xml version="1.0" encoding="utf-8"?>  ' +
-                          '<?mso-application progid="Excel.Sheet"?>  ' +
-                          '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"  ' +
-                          'xmlns:o="urn:schemas-microsoft-com:office:office"  ' +
-                          'xmlns:x="urn:schemas-microsoft-com:office:excel"  ' +
-                          'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"  ' +
-                          'xmlns:html="http://www.w3.org/TR/REC-html40">  ' +
-                          '<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">  ' +
-                          '</DocumentProperties>  ' +
-                          '<OfficeDocumentSettings xmlns="urn:schemas-microsoft-com:office:office">  ' +
-                          '<RemovePersonalInformation/>  ' +
-                          '</OfficeDocumentSettings>  ' +
-                          '<ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">  ' +
-                          '</ExcelWorkbook><Styles>  ' + styles + '</Styles>  ' +
-                           workSheet + ' </Workbook>';
+            '<?mso-application progid="Excel.Sheet"?>  ' +
+            '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"  ' +
+            'xmlns:o="urn:schemas-microsoft-com:office:office"  ' +
+            'xmlns:x="urn:schemas-microsoft-com:office:excel"  ' +
+            'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"  ' +
+            'xmlns:html="http://www.w3.org/TR/REC-html40">  ' +
+            '<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">  ' +
+            '</DocumentProperties>  ' +
+            '<OfficeDocumentSettings xmlns="urn:schemas-microsoft-com:office:office">  ' +
+            '<RemovePersonalInformation/>  ' +
+            '</OfficeDocumentSettings>  ' +
+            '<ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">  ' +
+            '</ExcelWorkbook><Styles>  ' + styles + '</Styles>  ' +
+            workSheet + ' </Workbook>';
         return xmlInfo;
     },
     //构建数据模板
@@ -469,10 +491,10 @@ var JSXmlExcel = {
         var code = { '<': '&lt;', '>': '&gt;', '&': '&amp;', '\'': '&apos;', '"': '&quot;' };
         var encodeC = "";
         encodeC = content.replace(/</g, '&lt;')
-                                      .replace(/>/g, '&gt;')
-                                      .replace(/'/g, '&apos;')
-                                      .replace(/"/g, '&quot;')
-                                      .replace(/&(?![a-zA-Z]{1,10};)/, "&amp;");
+            .replace(/>/g, '&gt;')
+            .replace(/'/g, '&apos;')
+            .replace(/"/g, '&quot;')
+            .replace(/&(?![a-zA-Z]{1,10};)/, "&amp;");
         return encodeC;
     }
 };
