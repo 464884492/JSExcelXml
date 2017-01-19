@@ -18,6 +18,7 @@ JSExcelXml.js
  4. [雅虎 https://github.com/yahoo](https://github.com/yahoo)
  5. [B站 https://github.com/Bilibili](https://github.com/Bilibili)
  6. [微软 https://github.com/Microsoft](https://github.com/Microsoft)
+ 6. [微软office https://github.com/OfficeDev](https://github.com/OfficeDev)
  7. [百度前端 https://github.com/fex-team](https://github.com/fex-team)
  8. [百度EFE（Excellent FrontEnd）技术体系 https://github.com/ecomfe](https://github.com/ecomfe)
  8. [阿里巴巴 https://github.com/alibaba](https://github.com/alibaba)
