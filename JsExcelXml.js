@@ -166,39 +166,37 @@ var JSXmlExcel = {
         return titleXml;
     },
     BuildHeadXml: function (headInfo, rowStart, columnStart, skipRowIndex, Styles, defaultseting) {
-        var columnInfo = new Array();
+      var columnInfo = new Array();
         var headerXml = '';
         var columnCount = 0;
         var rowcount = 0;
         (function (columns) {
-            //2016-12-16 remove hidden column
-            for (var i = 0; i < columns.length; i++) {
-                for (var j = 0; j < columns[i].length; j++) {
-                    if (columns[i][j].hidden || columns[i][j].checkbox) {
-                        columns[i].splice(j, 1);
-                        j--;
-                    }
+           var headRowLen = columns.length;
+            for (var y = 0; y < headRowLen; y++) {
+                var curXRow =columns[y];
+                var curXRowLen = curXRow.length;
+                var nextPosx = 0;
+                for (var x = 0; x < curXRowLen; x++) {
+                    var curXCell = curXRow[x];
+                    curXCell.pos = {};
+                    curXCell.pos.x = nextPosx;
+                    curXCell.pos.y = y;
+                    curXCell.colspan = curXCell.colspan || 1;
+                    nextPosx = nextPosx + curXCell.colspan;
                 }
             }
-
-            for (var i = 0; i < columns.length; i++) {
-                for (var j = 0; j < columns[i].length; j++) {
-                    if (j == 0) {
-                        columns[i][j].pos = 1;
-                    }
-                    if (j > 0) {
-                        if (columns[i][j - 1].colspan) {
-                            columns[i][j].pos = columns[i][j - 1].pos + columns[i][j - 1].colspan;
-                        }
-                        else {
-                            columns[i][j].pos = columns[i][j - 1].pos + 1;
-                        }
-                    }
-                    if (i > 0) {
-                        for (var p = 0; p < columns[i - 1].length; p++) {
-                            if (columns[i - 1][p].pos == columns[i][j].pos) {
-                                if (columns[i - 1][p].rowspan && columns[i - 1][p].rowspan > i) {
-                                    columns[i][j].pos += 1;
+            for (var rowIndex = columns.length - 1; rowIndex >= 0; rowIndex--) {
+                var curYRow = columns[rowIndex];
+                for (var cellIndex = 0; cellIndex < curYRow.length; cellIndex++) {
+                    var curCell = curYRow[cellIndex];
+                    curCell.rowspan = curCell.rowspan || 1;
+                    if (curCell.rowspan > 1) {
+                        for (var nextRowindex = rowIndex + 1; nextRowindex <columns.length && curCell.rowspan > nextRowindex - rowIndex; nextRowindex++) {
+                            var nextRow = columns[nextRowindex];
+                            for (var nextCellIndex = 0; nextCellIndex < nextRow.length; nextCellIndex++) {
+                                var nextCell = nextRow[nextCellIndex];
+                                if (nextCell.pos.x >= curCell.pos.x) {
+                                    nextCell.pos.x += curCell.colspan;
                                 }
                             }
                         }
@@ -218,7 +216,7 @@ var JSXmlExcel = {
                 if (curcell.field) {
                     columnCount = columnCount + 1;
                     //判断是否单独设置列背景色
-                    var cobj = { columnfield: curcell.field, columnType: curcell.datatype, formatter: curcell.formatter, pos: curcell.pos, align: curcell.align };
+                    var cobj = { columnfield: curcell.field, columnType: curcell.datatype, formatter: curcell.formatter, pos: curcell.pos.x, align: curcell.align };
                     var colStyle = {};
                     if (curcell.bgcolor) {
                         cobj.BgColor = curcell.bgcolor
@@ -233,7 +231,7 @@ var JSXmlExcel = {
                     Styles.push(cellstyle);
                     columnInfo.push(cobj);
                 }
-                headerXml += '<Cell ss:StyleID="TableHeadStyle" ' + 'ss:Index="' + (curcell.pos + columnStart - 1) + '"' +
+                headerXml += '<Cell ss:StyleID="TableHeadStyle" ' + 'ss:Index="' + (curcell.pos.x + columnStart) + '"' +
                     ' ss:MergeDown="' + MergeDown + '"' +
                     ' ss:MergeAcross="' + MergeAcross + '"' +
                     ' ><Data ss:Type="String">' + curcell.title + '</Data></Cell>';
@@ -241,7 +239,7 @@ var JSXmlExcel = {
             headerXml += '</Row>';
             rowcount = rowcount + 1;
         }
-        columnInfo.sort(function (a, b) { return a.pos - b.pos });
+        columnInfo.sort(function (a, b) { return a.pos.x - b.pos.x });
         return {
             columnInfo: columnInfo,
             columnCount: columnCount,

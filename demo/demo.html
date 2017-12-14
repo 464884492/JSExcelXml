@@ -11,25 +11,48 @@
     <script src="ExportExcelDlg.js"></script>
 </head>
 <body>
-    <table id="dg" title="My Users" class="easyui-datagrid" style="width: 700px; height: 250px" toolbar="#toolbar" method="get" rownumbers="true" fitcolumns="true" singleselect="true">
+    <table id="dg" title="js导出excel测试" class="easyui-datagrid"  fit="true" toolbar="#toolbar" method="get" rownumbers="true" fitcolumns="true" singleselect="true">
         <thead>
+           <tr>
+             <th rowspan="2" colspan="2">合并行列</th>
+             <th rowspan="3"  data-options="field:'Field3',width:80">字段3</th>
+             <th colspan="4">合并行1</th>
+              <th  data-options="field:'Field8',width:80" rowspan="3">字段8</th>
+           </tr>
+           <tr>
+               <th  colspan="2">合并行2</th>
+               <th colspan="2">合并行3</th>
+           </tr>
             <tr>
-                <th field="firstname" width="50" excelWidth="200">First Name</th>
-                <th field="lastname" width="50">Last Name</th>
-                <th field="phone" width="50">Phone</th>
-                <th field="email" width="50">Email</th>
+                 <th  data-options="field:'Field1',width:80" >字段1</th>
+                 <th  data-options="field:'Field2',width:80" >字段2</th>
+                 <th  data-options="field:'Field4',width:80">字段4</th>
+                 <th  data-options="field:'Field5',width:80">字段5</th>
+                 <th  data-options="field:'Field6',width:80">字段6</th>
+                 <th  data-options="field:'Field7',width:80">字段7</th>
             </tr>
         </thead>
     </table>
     <div id="toolbar">
-        <a href="javascript:void(0)" class="easyui-linkbutton" iconcls="icon-add" plain="true" onclick="exportexcel(false)">导出</a>
-      <a href="javascript:void(0)" class="easyui-linkbutton" iconcls="icon-add" plain="true" onclick="exportexcel(true)">导出2</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" iconcls="icon-add" plain="true" onclick="exportexcel(false)">导出全部</a>
+      <a href="javascript:void(0)" class="easyui-linkbutton" iconcls="icon-add" plain="true" onclick="exportexcel(true)">导出前两条</a>
     </div>
 </body>
 <script type="text/javascript">
     $(function () {
         var grid = $("#dg");
-        var data = [{ "id": "174392", "firstname": "sdf", "lastname": "sdf", "phone": "dsf", "email": "dsf@qq.com" }, { "id": "174393", "firstname": "1", "lastname": "1", "phone": "", "email": "" }, { "id": "174397", "firstname": "33", "lastname": "33", "phone": "", "email": "" }, { "id": "174399", "firstname": "asda", "lastname": "asd", "phone": "asd", "email": "asda@qq.com" }];
+        var data = [
+{"Field1":"数据11","Field2":"数据21","Field3":"数据31","Field4":"数据41","Field5":"数据51","Field6":"数据61","Field7":"数据71","Field8":"数据81"},
+{"Field1":"数据12","Field2":"数据22","Field3":"数据32","Field4":"数据42","Field5":"数据52","Field6":"数据62","Field7":"数据72","Field8":"数据82"},
+{"Field1":"数据13","Field2":"数据23","Field3":"数据33","Field4":"数据43","Field5":"数据53","Field6":"数据63","Field7":"数据73","Field8":"数据83"},
+{"Field1":"数据13","Field2":"数据23","Field3":"数据33","Field4":"数据43","Field5":"数据53","Field6":"数据63","Field7":"数据73","Field8":"数据83"},
+{"Field1":"数据14","Field2":"数据24","Field3":"数据34","Field4":"数据44","Field5":"数据54","Field6":"数据64","Field7":"数据74","Field8":"数据84"},
+{"Field1":"数据16","Field2":"数据26","Field3":"数据36","Field4":"数据46","Field5":"数据56","Field6":"数据66","Field7":"数据76","Field8":"数据86"},
+{"Field1":"数据17","Field2":"数据27","Field3":"数据37","Field4":"数据47","Field5":"数据57","Field6":"数据67","Field7":"数据77","Field8":"数据87"},
+{"Field1":"数据18","Field2":"数据28","Field3":"数据38","Field4":"数据48","Field5":"数据58","Field6":"数据68","Field7":"数据78","Field8":"数据88"},
+{"Field1":"数据19","Field2":"数据29","Field3":"数据39","Field4":"数据49","Field5":"数据59","Field6":"数据69","Field7":"数据79","Field8":"数据89"},
+{"Field1":"数据10","Field2":"数据20","Field3":"数据30","Field4":"数据40","Field5":"数据50","Field6":"数据60","Field7":"数据70","Field8":"数据80"}
+         ];
         grid.datagrid("loadData", data);
     });
     function exportexcel(filter) {
@@ -39,7 +62,6 @@
         if(filter){
           rows=[rows[0],rows[1]];
         }
-        console.log(rows);
         var obj = $.ExportExcelDlg({
             HeadInfo: grid.datagrid("options").columns,
             RowInfo: rows,
