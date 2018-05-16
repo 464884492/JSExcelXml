@@ -35,3 +35,7 @@ JSExcelXml.js
  17. [intel https://github.com/intel](https://github.com/intel)
  18. [apache https://github.com/apache](https://github.com/apache)
  
+打赏码，欢迎打赏
+==============
+![1](https://github.com/464884492/JSExcelXml/blob/master/syn1.png?raw=true)
+![2](https://github.com/464884492/JSExcelXml/blob/master/syn2.png?raw=true)
