@@ -34,6 +34,7 @@ JSExcelXml.js
  16. [GoogleChrome https://github.com/GoogleChrome](https://github.com/GoogleChrome)
  17. [intel https://github.com/intel](https://github.com/intel)
  18. [apache https://github.com/apache](https://github.com/apache)
+ 19. [oracle https://github.com/oracle](https://github.com/oracle)
  
 ^^
 ==============
